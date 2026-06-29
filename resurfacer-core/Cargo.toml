@@ -7,6 +7,10 @@ edition = "2021"
 name = "resurfacer-core"
 path = "src/main.rs"
 
+[[bin]]
+name = "sim"
+path = "src/bin/sim.rs"
+
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
