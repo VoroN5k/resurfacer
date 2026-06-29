@@ -1523,6 +1523,7 @@ dependencies = [
  "tracing-subscriber",
  "tray-icon",
  "uuid",
+ "winapi",
  "windows",
  "winres",
 ]

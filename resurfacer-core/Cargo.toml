@@ -15,6 +15,10 @@ path = "src/bin/sim.rs"
 name = "idle_check"
 path = "src/bin/idle_check.rs"
 
+[[bin]]
+name = "night_mode"
+path = "src/bin/night_mode.rs"
+
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
@@ -45,4 +49,6 @@ windows = { version = "0.52", features = [
     "Win32_UI_Controls",
     "Win32_System_SystemInformation",
     "Win32_System_Threading",
+    "Win32_System_LibraryLoader",
 ] }
+winapi = { version = "0.3", features = ["wingdi", "winuser", "errhandlingapi", "synchapi", "handleapi", "libloaderapi"] }
