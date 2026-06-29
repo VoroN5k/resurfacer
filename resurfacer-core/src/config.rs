@@ -89,12 +89,12 @@ impl Config {
     }
 }
 
-/// Returns the path for config.toml, resolved relative to the running executable.
+// Returns the path for config.toml, resolved relative to the running executable
 pub fn config_path() -> PathBuf {
     exe_dir().join("config.toml")
 }
 
-/// Returns the directory containing the running executable.
+// Returns the directory containing the running executable
 pub fn exe_dir() -> PathBuf {
     std::env::current_exe()
         .ok()

@@ -19,6 +19,10 @@ models/             # GGUF files are multi-GB; download manually per README
 # The template is tracked; the generated copy next to the exe is not.
 target/**/com.resurfacer.host.json
 
+# Firefox extension — background.js is copied from extension/ by setup.ps1.
+# Only manifest.json is tracked; the generated JS is not.
+extension-firefox/background.js
+
 # OS noise
 .DS_Store
 Thumbs.db

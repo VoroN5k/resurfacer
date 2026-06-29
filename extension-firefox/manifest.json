@@ -13,12 +13,12 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"]
   },
   "browser_specific_settings": {
     "gecko": {
       "id": "resurfacer@resurfacer.local",
-      "strict_min_version": "127.0"
+      "strict_min_version": "109.0"
     }
   }
 }

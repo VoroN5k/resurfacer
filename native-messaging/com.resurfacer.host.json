@@ -1,6 +1,6 @@
-{
+﻿{
   "name": "com.resurfacer.host",
-  "description": "Resurfacer native messaging host — tab hygiene daemon",
+  "description": "Resurfacer native messaging host - tab hygiene daemon",
   "path": "REPLACE_WITH_ABSOLUTE_PATH_TO\\resurfacer-core.exe",
   "type": "stdio",
   "allowed_origins": [
