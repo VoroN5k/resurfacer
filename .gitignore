@@ -1,0 +1,37 @@
+# Rust
+/target/
+Cargo.lock          # binary crate — commit this if you want reproducible builds;
+                    # uncomment the line below to do so:
+# !Cargo.lock
+
+# Runtime artefacts
+resurfacer.db       # SQLite archive (generated at runtime, next to the exe)
+resurfacer.db-shm
+resurfacer.db-wal
+*.db
+*.db-shm
+*.db-wal
+
+# LLM model weights
+models/             # GGUF files are multi-GB; download manually per README
+
+# Native messaging host manifest (filled in by setup.ps1)
+# The template is tracked; the generated copy next to the exe is not.
+target/**/com.resurfacer.host.json
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*~
+
+# Environment / secrets
+.env
+.env.*

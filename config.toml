@@ -1,0 +1,18 @@
+[watch_later]
+grace_period_seconds = 20
+video_domains = ["youtube.com", "twitch.tv", "vimeo.com"]
+
+[rabbit_hole]
+cluster_window_minutes = 10
+no_focus_threshold_minutes = 15
+min_cluster_size = 3
+
+[idle_detection]
+presence_threshold_seconds = 120
+debounce_seconds = 15
+heavy_process_denylist = ["obs64.exe", "premiere.exe"]
+
+[llm]
+model_path = "./models/qwen2.5-7b-instruct-q4_k_m.gguf"
+max_tabs_per_summary_batch = 30
+excerpt_word_limit = 300
