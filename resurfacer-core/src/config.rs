@@ -33,7 +33,8 @@ pub struct IdleDetectionConfig {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct LlmConfig {
-    pub model_path: String,
+    pub ollama_url: String,
+    pub ollama_model: String,
     pub max_tabs_per_summary_batch: usize,
     pub excerpt_word_limit: usize,
 }
@@ -64,7 +65,7 @@ impl Default for RabbitHoleConfig {
 impl Default for IdleDetectionConfig {
     fn default() -> Self {
         Self {
-            presence_threshold_seconds: 120,
+            presence_threshold_seconds: 300,
             debounce_seconds: 15,
             heavy_process_denylist: vec!["obs64.exe".into(), "premiere.exe".into()],
         }
@@ -74,7 +75,8 @@ impl Default for IdleDetectionConfig {
 impl Default for LlmConfig {
     fn default() -> Self {
         Self {
-            model_path: "./models/qwen2.5-7b-instruct-q4_k_m.gguf".into(),
+            ollama_url: "http://localhost:11434".into(),
+            ollama_model: "qwen2.5:7b".into(),
             max_tabs_per_summary_batch: 30,
             excerpt_word_limit: 300,
         }

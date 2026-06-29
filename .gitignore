@@ -1,16 +1,13 @@
 # Rust
 /target/
-Cargo.lock          # binary crate — commit this if you want reproducible builds;
-                    # uncomment the line below to do so:
-# !Cargo.lock
+# Cargo.lock is tracked — binary crate, MSVC toolchain, reproducible builds matter
 
-# Runtime artefacts
-resurfacer.db       # SQLite archive (generated at runtime, next to the exe)
-resurfacer.db-shm
-resurfacer.db-wal
+# Runtime artefacts (generated next to the exe)
 *.db
 *.db-shm
 *.db-wal
+resurfacer.log
+resurfacer-notes.txt
 
 # LLM model weights
 models/             # GGUF files are multi-GB; download manually per README

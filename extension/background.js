@@ -34,25 +34,9 @@ function connect() {
     port = null;
   });
 
-  // Send a snapshot of all currently open tabs so the daemon can initialise its tracker
-  api.tabs.query({}, (tabs) => {
-    for (const tab of tabs) {
-      if (!isScriptable(tab.url)) continue;
-      send({
-        type: 'tab_created',
-        tab_id: tab.id,
-        url: tab.url,
-        title: tab.title ?? null,
-        opener_tab_id: null,   // unknown for pre-existing tabs
-        created_at: Date.now(),
-      });
-    }
-  });
-
-  // Also report the currently focused tab
-  api.tabs.query({ active: true, currentWindow: true }, ([active]) => {
-    if (active) send({ type: 'tab_activated', tab_id: active.id });
-  });
+  // Pre-existing tabs are not reported - the daemon only tracks tabs created
+  // after it starts. Sending a snapshot caused all existing tabs to look like
+  // a single temporal cluster and triggered mass archiving.
 
   console.log('[resurfacer] Connected to native host');
 }
@@ -162,8 +146,7 @@ async function extractContent(tabId) {
     });
   } catch (e) {
     console.warn('[resurfacer] Content extraction failed for tab', tabId, e.message);
-    // Send empty content so the daemon can still archive and close the tab
-    send({ type: 'tab_content', tab_id: tabId, text: '', title: null });
+    // Leave the tab open - do not send tab_content on failure
   }
 }
 

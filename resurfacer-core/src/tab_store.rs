@@ -24,6 +24,7 @@ pub struct ArchivedTab {
 }
 
 // A tab detected as a candidate but not yet archived - waiting for a free moment
+#[derive(Clone)]
 pub struct PendingTab {
     pub tab_id: i64,
     pub url: String,
@@ -196,6 +197,44 @@ impl TabStore {
         if !rows.is_empty() {
             self.conn.execute("DELETE FROM pending_tabs", [])?;
             tracing::info!(count = rows.len(), "Pending tabs taken for archival");
+        }
+        Ok(rows)
+    }
+
+    // Fetch and delete pending tabs detected more than `hours` hours ago.
+    // Called at startup to surface leftovers from previous sessions.
+    pub fn take_leftover_pending(&self, hours: u64) -> Result<Vec<PendingTab>> {
+        let threshold = (Utc::now() - chrono::Duration::hours(hours as i64)).to_rfc3339();
+
+        let mut stmt = self.conn.prepare(
+            "SELECT tab_id, url, title, opener_tab_id, created_at, detected_at,
+                    reason, cluster_id, is_video
+             FROM pending_tabs WHERE detected_at < ?1",
+        )?;
+
+        let rows: Vec<PendingTab> = stmt
+            .query_map(params![threshold], |row| {
+                Ok(PendingTab {
+                    tab_id:        row.get(0)?,
+                    url:           row.get(1)?,
+                    title:         row.get(2)?,
+                    opener_tab_id: row.get(3)?,
+                    created_at:    parse_dt(row.get::<_, String>(4)?),
+                    detected_at:   parse_dt(row.get::<_, String>(5)?),
+                    reason:        ArchivalReason::from_str(&row.get::<_, String>(6)?),
+                    cluster_id:    row.get(7)?,
+                    is_video:      row.get::<_, i64>(8)? != 0,
+                })
+            })?
+            .filter_map(|r| r.ok())
+            .collect();
+
+        if !rows.is_empty() {
+            self.conn.execute(
+                "DELETE FROM pending_tabs WHERE detected_at < ?1",
+                params![threshold],
+            )?;
+            tracing::info!(count = rows.len(), "Startup: took leftover pending tabs");
         }
         Ok(rows)
     }

@@ -111,7 +111,9 @@ impl IdleDetector {
     // Private
 
     fn is_free(&mut self) -> bool {
-        self.is_user_present() && !self.is_heavy_app_foreground()
+        // "Free moment" = user has been AWAY from keyboard long enough,
+        // and no heavy app (game/recording) is blocking archival.
+        !self.is_user_present() && !self.is_heavy_app_foreground()
     }
 
     // Look up a process name by PID using sysinfo (cross-platform)

@@ -130,19 +130,30 @@ impl TabTracker {
 
     // Called by main when the idle detector fires a free-moment event
     //
-    // Drains the pending_tabs table, archives each tab, and returns the
-    // close_tab / request_content commands to send to the extension
-    pub fn flush_pending(&mut self, store: &TabStore) -> anyhow::Result<Vec<DaemonCommand>> {
+    // Drains the pending_tabs table, archives each tab, and returns
+    // commands for the extension plus the flushed tabs for recap generation
+    pub fn flush_pending(
+        &mut self,
+        store: &TabStore,
+    ) -> anyhow::Result<(Vec<DaemonCommand>, Vec<crate::tab_store::PendingTab>)> {
         let pending = store.take_all_pending()?;
         if pending.is_empty() {
-            return Ok(vec![]);
+            return Ok((vec![], vec![]));
         }
+        let flushed = pending.clone();
 
         tracing::info!(count = pending.len(), "Free moment - flushing pending tabs");
         let mut commands = Vec::new();
 
         for tab in pending {
             if let Some(t) = self.tabs.get_mut(&tab.tab_id) {
+                // Safety: if the tab was rescued (user focused it) after being added to
+                // pending but before remove_pending completed, skip it
+                if t.status == TabStatus::Active {
+                    tracing::warn!(tab_id = tab.tab_id, "Skipping active tab found in pending flush");
+                    continue;
+                }
+
                 if tab.is_video {
                     // Video: archive immediately, close right now
                     store.archive_tab(&ArchivedTab {
@@ -188,7 +199,7 @@ impl TabTracker {
         }
 
         self.tabs.retain(|_, t| t.status != TabStatus::Closed);
-        Ok(commands)
+        Ok((commands, flushed))
     }
 
     // Private: content completion
@@ -265,7 +276,7 @@ impl TabTracker {
     fn check_rabbit_holes(&mut self, store: &TabStore) -> anyhow::Result<()> {
         let no_focus_threshold =
             Duration::from_secs(self.config.rabbit_hole.no_focus_threshold_minutes * 60);
-        let cluster_window =
+        let _cluster_window =
             Duration::from_secs(self.config.rabbit_hole.cluster_window_minutes * 60);
         let min_size = self.config.rabbit_hole.min_cluster_size;
 
@@ -283,10 +294,10 @@ impl TabTracker {
         let mut seen: HashSet<i64> = HashSet::new();
         let mut clusters_to_queue: Vec<(Vec<i64>, String)> = Vec::new();
 
-        for cluster in self
-            .build_opener_clusters(&active_ids)
-            .into_iter()
-            .chain(self.build_temporal_clusters(&active_ids, cluster_window))
+        // Temporal clustering is intentionally disabled - it groups any tabs
+        // opened within the window regardless of source, which causes false positives
+        // when many tabs are opened in a short session. Opener-chain clustering only.
+        for cluster in self.build_opener_clusters(&active_ids)
         {
             if cluster.len() < min_size { continue; }
 

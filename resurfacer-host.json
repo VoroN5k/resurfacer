@@ -1,0 +1,7 @@
+{
+  "name": "com.resurfacer.host",
+  "description": "Resurfacer native messaging host",
+  "path": "D:\\Projects\\resurfacer\\target\\release\\resurfacer-core.exe",
+  "type": "stdio",
+  "allowed_extensions": ["resurfacer@resurfacer.local"]
+}
