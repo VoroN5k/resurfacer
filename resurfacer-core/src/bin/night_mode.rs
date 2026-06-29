@@ -18,7 +18,9 @@ use winapi::um::synchapi::{CreateEventW, CreateMutexW, OpenEventW, OpenMutexW, S
 
 const ALIVE_MUTEX:  &str = "Local\\ResurfacerNightAlive";
 const TOGGLE_EVENT: &str = "Local\\ResurfacerNightToggle";
-const HOTKEY_ID:     i32 = 9001;
+const HOTKEY_ID:      i32 = 9001;
+const HOTKEY_ID_RAM:  i32 = 9002;
+const RAM_TASK_NAME: &str = "ResurfacerRamFlush";
 
 fn main() {
     // If another instance is running, signal it to toggle and exit.
@@ -57,13 +59,14 @@ fn run_tray() {
         CreateEventW(std::ptr::null_mut(), 0, 0, wide(TOGGLE_EVENT).as_ptr())
     };
 
-    // Global hotkey: Ctrl+Alt+N
+    // Global hotkeys: Ctrl+Alt+N (night mode), Ctrl+Alt+F (RAM flush)
     let hotkey_ok = unsafe {
         RegisterHotKey(None, HOTKEY_ID, MOD_CONTROL | MOD_ALT, 0x4E /* N */).is_ok()
     };
     if !hotkey_ok {
         eprintln!("Warning: could not register Ctrl+Alt+N (already in use?)");
     }
+    unsafe { let _ = RegisterHotKey(None, HOTKEY_ID_RAM, MOD_CONTROL | MOD_ALT, 0x46 /* F */); }
 
     // Tray menu
     let item_toggle = MenuItem::new("Нічний режим: ВИМК", true, None);
@@ -91,8 +94,12 @@ fn run_tray() {
         if unsafe { PeekMessageW(&mut msg, None, 0, 0, PM_REMOVE) }.as_bool() {
             if msg.message == WM_QUIT { break; }
 
-            if msg.message == WM_HOTKEY && msg.wParam.0 as i32 == HOTKEY_ID {
-                do_toggle(&mut night, &mut mag, &mut tray, &item_toggle);
+            if msg.message == WM_HOTKEY {
+                match msg.wParam.0 as i32 {
+                    id if id == HOTKEY_ID     => do_toggle(&mut night, &mut mag, &mut tray, &item_toggle),
+                    id if id == HOTKEY_ID_RAM => do_ram_flush(),
+                    _ => {}
+                }
             }
 
             unsafe { TranslateMessage(&msg); DispatchMessageW(&msg); }
@@ -131,6 +138,7 @@ fn run_tray() {
 
     unsafe {
         if hotkey_ok { let _ = UnregisterHotKey(None, HOTKEY_ID); }
+        let _ = UnregisterHotKey(None, HOTKEY_ID_RAM);
         CloseHandle(toggle_ev);
         CloseHandle(alive);
     }
@@ -158,6 +166,32 @@ fn do_toggle(
         let _ = tray.set_icon(Some(circle_icon(0xC8, 0xC8, 0xC8)));
         let _ = tray.set_tooltip(Some("Night Mode: OFF  (Ctrl+Alt+N)"));
         item.set_text("Нічний режим: ВИМК");
+    }
+}
+
+fn do_ram_flush() {
+    // Trigger the scheduled task if installed, else launch ram_flush.exe directly.
+    let task_exists = std::process::Command::new("schtasks")
+        .args(["/query", "/tn", RAM_TASK_NAME])
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false);
+
+    if task_exists {
+        std::process::Command::new("schtasks")
+            .args(["/run", "/tn", RAM_TASK_NAME])
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .ok();
+    } else {
+        // Task not installed — launch ram_flush.exe from same directory.
+        if let Ok(mut exe) = std::env::current_exe() {
+            exe.set_file_name("ram_flush.exe");
+            std::process::Command::new(exe).spawn().ok();
+        }
     }
 }
 

@@ -19,6 +19,10 @@ path = "src/bin/idle_check.rs"
 name = "night_mode"
 path = "src/bin/night_mode.rs"
 
+[[bin]]
+name = "ram_flush"
+path = "src/bin/ram_flush.rs"
+
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
@@ -51,4 +55,9 @@ windows = { version = "0.52", features = [
     "Win32_System_Threading",
     "Win32_System_LibraryLoader",
 ] }
-winapi = { version = "0.3", features = ["wingdi", "winuser", "errhandlingapi", "synchapi", "handleapi", "libloaderapi"] }
+winapi = { version = "0.3", features = [
+    "wingdi", "winuser", "errhandlingapi",
+    "synchapi", "handleapi", "libloaderapi",
+    "processthreadsapi", "securitybaseapi", "shellapi",
+    "sysinfoapi", "winbase", "winnt",
+] }
